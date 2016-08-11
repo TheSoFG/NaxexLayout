@@ -9,9 +9,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Toast;
 
+import com.bytelicious.naxexlayout.connectivity.StockAsyncTask;
 import com.bytelicious.naxexlayout.pojos.Stock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,11 +22,17 @@ public class MainActivity extends AppCompatActivity {
 
     ArrayList<Stock> stocks;
 
+    private static List<String> allowedStocks = Arrays.asList("EURUSD", "GBPUSD", "USDCHF", "USDJPY", "AUDUSD", "USDCAD", "GBPJPY", "EURGBP", "EURJPY", "AUDCAD");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        StockAsyncTask stockAsyncTask = new StockAsyncTask();
+
+        stockAsyncTask.execute();
 
         recyclerView = (RecyclerView) findViewById(R.id.rv_layout);
 
