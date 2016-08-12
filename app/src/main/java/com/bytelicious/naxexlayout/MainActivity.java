@@ -2,6 +2,7 @@ package com.bytelicious.naxexlayout;
 
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,9 +17,23 @@ import com.bytelicious.naxexlayout.pojos.Stock;
 import com.bytelicious.naxexlayout.pojos.StockKVP;
 import com.bytelicious.naxexlayout.utils.AvailableStocksDialogFragment;
 import com.bytelicious.naxexlayout.utils.RecyclerViewStockAdapter;
+import com.bytelicious.naxexlayout.utils.StockDateDeserializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -45,9 +60,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        StockAsyncTask stockAsyncTask = new StockAsyncTask();
-//
-//        stockAsyncTask.execute();
+        StockAsyncTask stockAsyncTask = new StockAsyncTask();
+
+        stockAsyncTask.execute();
 
         fabAddStock = (FloatingActionButton) findViewById(R.id.fab_add_stock);
         recyclerView = (RecyclerView) findViewById(R.id.rv_layout);
@@ -182,29 +197,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void fixStocks() {
 
-        stocks.clear();
+//        stocks.clear();
+//
+//        for(StockKVP allowedStock : allowedStocks) {
+//
+//            if(allowedStock.picked) {
+//
+//                for(Stock stock : mockStocks) {
+//
+//                    if(stock.displayName.equals(allowedStock.name)) {
+//
+//                        stocks.add(stock);
+//
+//                    }
+//
+//                }
+//
+//            }
+//
+//        }
 
-        for(StockKVP allowedStock : allowedStocks) {
+        if(stocks != null && !stocks.isEmpty()) {
 
-            if(allowedStock.picked) {
+            if (recyclerView.getAdapter() != null) {
 
-                for(Stock stock : mockStocks) {
-
-                    if(stock.displayName.equals(allowedStock.name)) {
-
-                        stocks.add(stock);
-
-                    }
-
-                }
+                ((RecyclerViewStockAdapter) (recyclerView.getAdapter())).replaceData(stocks);
 
             }
-
-        }
-
-        if(recyclerView.getAdapter() != null) {
-
-            ((RecyclerViewStockAdapter) (recyclerView.getAdapter())).replaceData(stocks);
 
         }
 
@@ -292,6 +311,140 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (data != null && data.hasExtra(KEY_SELECTED_STOCKS)) {
 
             allowedStocks = data.getParcelableArrayListExtra(KEY_SELECTED_STOCKS);
+            fixStocks();
+
+        }
+
+    }
+
+    public class StockAsyncTask extends AsyncTask<Void, Void, ArrayList<Stock>> {
+
+        URL defaultURL;
+        URL specificStocksURL;
+
+        private static final String baseURL = "http://eu.tradenetworks.com/QuotesBox/quotes/GetQuotesBySymbols?languageCode=en-US&amp;symbols=";
+
+        public static final String ASP_NET_SESSION = "ASP.NET_SessionId";
+        public static final String COOKIES = "Set-Cookie";
+
+        public StockAsyncTask() {
+
+            try {
+
+                defaultURL = new URL("http://eu.tradenetworks.com/QuotesBox/quotes/GetQuotesBySymbols?languageCode=en-US&symbols=EURUSD,GBPUSD,USDCHF,USDJPY,AUDUSD,USDCAD,GBPJPY,EURGBP,EURJPY,AUDCAD");
+
+            } catch (MalformedURLException e) {
+
+                e.printStackTrace();
+
+            }
+
+        }
+
+        @Override
+        protected ArrayList<Stock> doInBackground(Void... voids) {
+
+            try {
+
+                String sessionId = null;
+
+                HttpURLConnection connection = (HttpURLConnection) defaultURL.openConnection();
+                List<String> cookies = connection.getHeaderFields().get(COOKIES);
+                for (String cookie : cookies) {
+
+                    if (cookie.contains(ASP_NET_SESSION)) {
+
+                        sessionId = cookie.substring(cookie.indexOf("=") + 1, cookie.indexOf(";"));
+                        break;
+
+                    }
+
+                }
+
+                if (sessionId != null) {
+
+//                specificStocksURL = new URL(baseURL + "EURUSD,GBPUSD");
+                    specificStocksURL = defaultURL;
+                    HttpURLConnection specificStockConnection = (HttpURLConnection) specificStocksURL.openConnection();
+
+                    specificStockConnection.setRequestProperty(ASP_NET_SESSION, sessionId);
+
+                    BufferedReader br;
+                    if(specificStockConnection.getInputStream() != null) {
+
+                        br = new BufferedReader(new InputStreamReader(specificStockConnection.getInputStream()));
+
+                        String jsonStocks = "";
+
+                        String stock;
+
+                        while ((stock = br.readLine()) != null) {
+
+                            jsonStocks += stock;
+
+                        }
+
+                        ObjectMapper mapper = new ObjectMapper();
+                        mapper.setPropertyNamingStrategy(PropertyNamingStrategy.PASCAL_CASE_TO_CAMEL_CASE);
+
+                        SimpleModule dateModule = new SimpleModule();
+                        dateModule.addDeserializer(Date.class, new StockDateDeserializer());
+                        mapper.registerModule(dateModule);
+                        JSONArray arrayOfStocks = new JSONArray(jsonStocks.substring(1, jsonStocks.length()-1));
+
+                        if (arrayOfStocks != null) {
+
+                            Stock[] stocks = mapper.readValue(arrayOfStocks.toString(), Stock[].class);
+
+                            if(stocks != null) {
+
+                                return new ArrayList(Arrays.asList(stocks));
+
+                            }
+
+                        }
+
+                    } else {
+
+                        br = new BufferedReader(new InputStreamReader(specificStockConnection.getErrorStream()));
+
+                        String jsonStocks = "";
+
+                        String stock;
+
+                        while ((stock = br.readLine()) != null) {
+
+                            jsonStocks += stock;
+
+                        }
+
+                        if (!jsonStocks.equals("")) {
+
+                        }
+
+                    }
+
+
+                }
+
+            } catch (IOException e) {
+
+                e.printStackTrace();
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<Stock> stocks) {
+
+            super.onPostExecute(stocks);
+
+            MainActivity.this.stocks = stocks;
+
             fixStocks();
 
         }

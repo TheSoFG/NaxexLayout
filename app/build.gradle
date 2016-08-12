@@ -28,4 +28,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.5.4'
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.5.4'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.5.4'
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+
 }

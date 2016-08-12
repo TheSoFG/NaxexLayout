@@ -18,8 +18,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
-import javax.net.ssl.HttpsURLConnection;
-
 /**
  * Created by ACER PC on 8/11/2016.
  */
@@ -37,7 +35,7 @@ public class StockAsyncTask extends AsyncTask<Void, Void, Void> {
 
         try {
 
-            defaultURL = new URL("http://eu.tradenetworks.com/QuotesBox/quotes/GetQuotesBySymbols?languageCode=en-US&amp;symbols=EURUSD,GBPUSD,USDCHF,USDJPY,AUDUSD,USDCAD,GBPJPY,EURGBP,EURJPY,AUDCAD");
+            defaultURL = new URL("http://eu.tradenetworks.com/QuotesBox/quotes/GetQuotesBySymbols?languageCode=en-US&symbols=EURUSD,GBPUSD,USDCHF,USDJPY,AUDUSD,USDCAD,GBPJPY,EURGBP,EURJPY,AUDCAD");
 
         } catch (MalformedURLException e) {
 
@@ -61,6 +59,7 @@ public class StockAsyncTask extends AsyncTask<Void, Void, Void> {
                 if (cookie.contains(ASP_NET_SESSION)) {
 
                     sessionId = cookie.substring(cookie.indexOf("=") + 1, cookie.indexOf(";"));
+                    break;
 
                 }
 
@@ -68,31 +67,51 @@ public class StockAsyncTask extends AsyncTask<Void, Void, Void> {
 
             if (sessionId != null) {
 
-                specificStocksURL = new URL(baseURL);
+//                specificStocksURL = new URL(baseURL + "EURUSD,GBPUSD");
+                specificStocksURL = defaultURL;
                 HttpURLConnection specificStockConnection = (HttpURLConnection) specificStocksURL.openConnection();
 
                 specificStockConnection.setRequestProperty(ASP_NET_SESSION, sessionId);
 
-                BufferedReader br =
-                        new BufferedReader(
-                                new InputStreamReader(specificStockConnection.getInputStream()));
+                BufferedReader br;
+                if(specificStockConnection.getInputStream() != null) {
 
-                String jsonStocks = "";
+                    br = new BufferedReader(new InputStreamReader(specificStockConnection.getInputStream()));
 
-                String stock;
+                    String jsonStocks = "";
 
-                while((stock = br.readLine()) != null) {
+                    String stock;
 
-                    jsonStocks += stock;
+                    while ((stock = br.readLine()) != null) {
 
-                }
+                        jsonStocks += stock;
 
-                ObjectMapper mapper = new ObjectMapper();
-                JSONArray arrayOfStocks = new JSONArray(jsonStocks);
+                    }
 
-                if(arrayOfStocks != null) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    JSONArray arrayOfStocks = new JSONArray(jsonStocks);
 
+                    if (arrayOfStocks != null) {
 
+                    }
+
+                } else {
+
+                    br = new BufferedReader(new InputStreamReader(specificStockConnection.getErrorStream()));
+
+                    String jsonStocks = "";
+
+                    String stock;
+
+                    while ((stock = br.readLine()) != null) {
+
+                        jsonStocks += stock;
+
+                    }
+
+                    if (!jsonStocks.equals("")) {
+
+                    }
 
                 }
 
