@@ -1,4 +1,4 @@
-package com.bytelicious.naxexlayout;
+package com.bytelicious.naxexlayout.utils;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.bytelicious.naxexlayout.R;
 import com.bytelicious.naxexlayout.pojos.Stock;
 
 import java.util.ArrayList;
@@ -106,6 +107,41 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
             });
 
         }
+
+    }
+
+    public Stock removeAtPosition(int position) {
+
+//        if(position > -1 && position < stocks.size()) {
+
+//            boolean removed = stocks.remove(position) != null;
+            Stock removedStock = stocks.remove(position);
+            notifyDataSetChanged();
+            return removedStock;
+//            return removed;
+//
+//        }
+//
+//        return false;
+    }
+
+    public void add(Stock newStock) {
+
+        stocks.add(newStock);
+        notifyDataSetChanged();
+
+    }
+
+    public ArrayList<Stock> getStocks() {
+
+        return stocks;
+
+    }
+
+    public void replaceData(ArrayList<Stock> newData) {
+
+        this.stocks = newData;
+        notifyDataSetChanged();
 
     }
 

@@ -4,6 +4,11 @@ import android.os.AsyncTask;
 import android.webkit.CookieManager;
 
 import com.bytelicious.naxexlayout.MainActivity;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,7 +28,7 @@ public class StockAsyncTask extends AsyncTask<Void, Void, Void> {
     URL defaultURL;
     URL specificStocksURL;
 
-    private static final String baseURL = "";
+    private static final String baseURL = "http://eu.tradenetworks.com/QuotesBox/quotes/GetQuotesBySymbols?languageCode=en-US&amp;symbols=";
 
     public static final String ASP_NET_SESSION = "ASP.NET_SessionId";
     public static final String COOKIES = "Set-Cookie";
@@ -32,7 +37,7 @@ public class StockAsyncTask extends AsyncTask<Void, Void, Void> {
 
         try {
 
-            defaultURL = new URL("");
+            defaultURL = new URL("http://eu.tradenetworks.com/QuotesBox/quotes/GetQuotesBySymbols?languageCode=en-US&amp;symbols=EURUSD,GBPUSD,USDCHF,USDJPY,AUDUSD,USDCAD,GBPJPY,EURGBP,EURJPY,AUDCAD");
 
         } catch (MalformedURLException e) {
 
@@ -72,7 +77,7 @@ public class StockAsyncTask extends AsyncTask<Void, Void, Void> {
                         new BufferedReader(
                                 new InputStreamReader(specificStockConnection.getInputStream()));
 
-                String jsonStocks = new String();
+                String jsonStocks = "";
 
                 String stock;
 
@@ -82,12 +87,24 @@ public class StockAsyncTask extends AsyncTask<Void, Void, Void> {
 
                 }
 
+                ObjectMapper mapper = new ObjectMapper();
+                JSONArray arrayOfStocks = new JSONArray(jsonStocks);
+
+                if(arrayOfStocks != null) {
+
+
+
+                }
+
+
             }
 
         } catch (IOException e) {
 
             e.printStackTrace();
 
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
         return null;

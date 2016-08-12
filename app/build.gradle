@@ -24,4 +24,8 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.1.1'
     compile 'com.android.support:recyclerview-v7:24.1.1'
+    compile 'com.android.support:design:24.1.1'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.5.4'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.5.4'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.5.4'
 }
