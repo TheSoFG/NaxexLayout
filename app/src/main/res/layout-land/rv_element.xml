@@ -1,34 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal">
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="horizontal"
+              android:paddingBottom="@dimen/horizontal_padding"
+              android:paddingTop="@dimen/horizontal_padding">
 
     <TextView
-        android:id="@+id/tv_bid"
+        android:id="@+id/tv_stock_name"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_marginEnd="@dimen/horizontal_textview_margin"
+        android:layout_marginRight="@dimen/horizontal_textview_margin"
+        android:gravity="center"/>
+
+    <RelativeLayout
+        android:id="@+id/rl_bid"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1" />
+        android:layout_marginEnd="@dimen/horizontal_textview_margin"
+        android:layout_marginRight="@dimen/horizontal_textview_margin"
+        android:layout_weight="2">
 
-    <TextView
-        android:id="@+id/tv_ask"
+        <Button
+            android:id="@+id/btn_sell"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:background="@android:color/black"
+            android:text="@string/sell"
+            android:textColor="@android:color/white"/>
+
+        <TextView
+            android:id="@+id/tv_bid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/btn_sell"
+            android:layout_toStartOf="@id/btn_sell"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_ask"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1" />
+        android:layout_weight="2">
 
 
-    <Button
-        android:id="@+id/btn_buy"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="@string/buy" />
+        <Button
+            android:id="@+id/btn_buy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:background="@android:color/black"
+            android:text="@string/buy"
+            android:textColor="@android:color/white"/>
 
-    <Button
-        android:id="@+id/btn_sell"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="@string/sell" />
+        <TextView
+            android:id="@+id/tv_ask"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/btn_buy"
+            android:layout_toStartOf="@id/btn_buy"/>
+
+    </RelativeLayout>
 
 </LinearLayout>

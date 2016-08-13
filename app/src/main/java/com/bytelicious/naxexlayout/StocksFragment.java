@@ -21,6 +21,7 @@ import com.bytelicious.naxexlayout.connectivity.BaseAsyncTask;
 import com.bytelicious.naxexlayout.pojos.Stock;
 import com.bytelicious.naxexlayout.pojos.StockKVP;
 import com.bytelicious.naxexlayout.utils.AvailableStocksDialogFragment;
+import com.bytelicious.naxexlayout.utils.GridItemDecorator;
 import com.bytelicious.naxexlayout.utils.RecyclerViewStockAdapter;
 import com.bytelicious.naxexlayout.utils.StockDateDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,11 +34,14 @@ import org.json.JSONException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by ACER PC on 8/13/2016.
@@ -49,6 +53,8 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
     RecyclerView recyclerView;
 
     ArrayList<Stock> stocks;
+
+    Random random = new Random();
 
     public static final String KEY_AVAILABLE_STOCKS = "availableStocks";
     public static final String KEY_SELECTED_STOCKS = "selectedStocks";
@@ -123,16 +129,16 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
         recyclerView.setAdapter(new RecyclerViewStockAdapter(getActivity(), stocks, new RecyclerViewStockAdapter.StockActionListener() {
 
             @Override
-            public void onBuyClicked(View v, int position) {
+            public void onBuyClicked(View v, String stockName, double price) {
 
-                Toast.makeText(getActivity(), "buying " + (position + 1), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), String.format(getResources().getString(R.string.buying_toast), stockName, String.valueOf(price)) , Toast.LENGTH_SHORT).show();
 
             }
 
             @Override
-            public void onSellClicked(View v, int position) {
+            public void onSellClicked(View v, String stockName, double price) {
 
-                Toast.makeText(getActivity(), "selling " + (position + 1), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), String.format(getResources().getString(R.string.selling_toast), stockName, String.valueOf(price)) , Toast.LENGTH_SHORT).show();
 
             }
         }));
@@ -225,10 +231,12 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
             recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-
         } else if (orientation == Configuration.ORIENTATION_PORTRAIT) {
 
-            recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+            int columns = 2;
+
+            recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), columns));
+            recyclerView.addItemDecoration(new GridItemDecorator(columns, 10, true));
 
         }
 
@@ -311,7 +319,6 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
                 Bundle args = new Bundle();
                 args.putParcelableArrayList(KEY_AVAILABLE_STOCKS, allowedStocks);
                 availableStocksDialogFragment.setArguments(args);
-//                availableStocksDialogFragment.setOnDFResult(this);
                 availableStocksDialogFragment.setTargetFragment(this, REQUEST_ADD_STOCKS);
                 availableStocksDialogFragment.show(getFragmentManager(), null);
 
@@ -459,11 +466,34 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
             super.onPostExecute(stocks);
 
-            StocksFragment.this.stocks = stocks;
+            if(stocks != null) {
 
-            fixStocks();
+                // temporary, data isn't changing and I Need to test the design
+                int decimalPlaces = 4;
+                for (int i = 0; i < stocks.size(); ++i) {
+
+                    stocks.get(i).ask = round(random.nextDouble(), decimalPlaces);
+                    stocks.get(i).bid = round(random.nextDouble(), decimalPlaces);
+                    stocks.get(i).changeOrientation = random.nextInt(3);
+
+                }
+
+                StocksFragment.this.stocks = stocks;
+
+                fixStocks();
+
+            }
 
         }
+
+    }
+
+    private double round(double value, int decimalPlaces) {
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(decimalPlaces, RoundingMode.HALF_UP);
+
+        return bd.doubleValue();
 
     }
 

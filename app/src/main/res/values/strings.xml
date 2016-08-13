@@ -3,4 +3,8 @@
     <string name="buy">Buy</string>
     <string name="sell">Sell</string>
     <string name="add_available_stock">Add</string>
+    <string name="ask">Ask</string>
+    <string name="bid">Bid</string>
+    <string name="selling_toast">Sold %1$s at %2$s</string>
+    <string name="buying_toast">Bought %1$s at %2$s</string>
 </resources>

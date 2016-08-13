@@ -162,22 +162,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         fabAddStock.setOnClickListener(this);
 
-        recyclerView.setAdapter(new RecyclerViewStockAdapter(this, stocks, new RecyclerViewStockAdapter.StockActionListener() {
-
-            @Override
-            public void onBuyClicked(View v, int position) {
-
-                Toast.makeText(MainActivity.this, "buying " + (position + 1), Toast.LENGTH_SHORT).show();
-
-            }
-
-            @Override
-            public void onSellClicked(View v, int position) {
-
-                Toast.makeText(MainActivity.this, "selling " + (position + 1), Toast.LENGTH_SHORT).show();
-
-            }
-        }));
+//        recyclerView.setAdapter(new RecyclerViewStockAdapter(this, stocks, new RecyclerViewStockAdapter.StockActionListener() {
+//
+//            @Override
+//            public void onBuyClicked(View v, int position) {
+//
+//                Toast.makeText(MainActivity.this, "buying " + (position + 1), Toast.LENGTH_SHORT).show();
+//
+//            }
+//
+//            @Override
+//            public void onSellClicked(View v, int position) {
+//
+//                Toast.makeText(MainActivity.this, "selling " + (position + 1), Toast.LENGTH_SHORT).show();
+//
+//            }
+//        }));
 
         setDeleteOnSwipe();
 
