@@ -1,5 +1,6 @@
 package com.bytelicious.naxexlayout.utils;
 
+import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.Intent;
 import android.os.Bundle;
@@ -38,16 +39,27 @@ public class AvailableStocksDialogFragment extends DialogFragment implements Vie
 
             case R.id.btn_add_available_stock:
 
+                availableStocks = ((AvailableStocksBaseAdapter) lvAvailableStocks.getAdapter()).getModifiedData();
+
+                Intent intent = new Intent();
+                intent.putExtra(MainActivity.KEY_SELECTED_STOCKS, availableStocks);
+
                 if (onDFResult != null) {
-
-                    availableStocks = ((AvailableStocksBaseAdapter)lvAvailableStocks.getAdapter()).getModifiedData();
-
-                    Intent intent = new Intent();
-                    intent.putExtra(MainActivity.KEY_SELECTED_STOCKS, availableStocks);
 
                     onDFResult.onDFResult(intent);
 
                     dismiss();
+
+                } else {
+
+                    if (getTargetFragment() != null) {
+
+                        getTargetFragment().onActivityResult(
+                                getTargetRequestCode(), Activity.RESULT_OK, intent);
+
+                        dismiss();
+
+                    }
 
                 }
 
