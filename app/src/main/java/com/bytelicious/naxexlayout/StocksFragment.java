@@ -38,6 +38,7 @@ import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -569,6 +570,10 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
                 reefreshStocks(recyclerView, StocksFragment.this.stocks);
 
+            } else {
+
+                Toast.makeText(StocksFragment.this.getActivity(), getString(R.string.cannot_download_stocks), Toast.LENGTH_SHORT).show();
+
             }
 
         }
@@ -578,7 +583,8 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
     /**
      * Used to truncate the doubles to only 4 symbols after
      * decimal point, probably useless if used with real data
-     * @param value -- double value to trunkate
+     *
+     * @param value         -- double value to trunkate
      * @param decimalPlaces -- number of decimal places to truncate to
      * @return -- truncated double value
      */
