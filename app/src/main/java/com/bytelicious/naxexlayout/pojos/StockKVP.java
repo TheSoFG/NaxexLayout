@@ -3,6 +3,9 @@ package com.bytelicious.naxexlayout.pojos;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+/**
+ * Class that is used to transport the necessary stocks to be shown on the screen
+ */
 public class StockKVP implements Parcelable {
 
     public String name;

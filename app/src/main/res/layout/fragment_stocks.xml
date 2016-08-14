@@ -2,19 +2,18 @@
 <android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.bytelicious.naxexlayout.MainActivity">
+    android:paddingTop="@dimen/activity_vertical_margin">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_add_stock"
@@ -23,10 +22,8 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:src="@drawable/ic_add_black_24dp"
-
+        app:layout_anchor="@id/rv_layout"
         app:layout_anchorGravity="bottom|right|end"
         app:layout_behavior="com.bytelicious.naxexlayout.utils.StockFABBehavior"/>
-
-    <!--app:layout_anchor="@id/rv_layout"-->
 
 </android.support.design.widget.CoordinatorLayout>

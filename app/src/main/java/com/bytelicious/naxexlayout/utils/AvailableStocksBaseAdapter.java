@@ -13,6 +13,9 @@ import com.bytelicious.naxexlayout.pojos.StockKVP;
 
 import java.util.ArrayList;
 
+/**
+ * BaseAdapter to show the stocks and allows the user to pick which one to be shown
+ */
 public class AvailableStocksBaseAdapter extends BaseAdapter {
 
     private ArrayList<StockKVP> availableItems;
@@ -76,6 +79,9 @@ public class AvailableStocksBaseAdapter extends BaseAdapter {
         vh.cbPicked.setChecked(availableItems.get(i).picked);
         vh.tvName.setText(availableItems.get(i).name);
 
+        // onClickListener used here instead of onCheckedChange
+        // since when scrolling the checkboxes' onCheckedCHange
+        // was called and breaking their state
         final int position = i;
         vh.cbPicked.setOnClickListener(new View.OnClickListener() {
 

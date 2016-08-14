@@ -12,6 +12,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,39 +46,50 @@ import java.util.Random;
 
 /**
  * Created by ACER PC on 8/13/2016.
+ * Main container
  */
 public class StocksFragment extends Fragment implements View.OnClickListener {
 
     FloatingActionButton fabAddStock;
 
     RecyclerView recyclerView;
+    int columnsForRecyclerView = 2;
 
+    // stocks used to be sent to the RecyclerView adapter
     ArrayList<Stock> stocks;
 
+    // used for debugging purposes
     Random random = new Random();
 
+    // used for traversing data from and to the DialogFragment
+    // that is shown after the FAB is clicked
     public static final String KEY_AVAILABLE_STOCKS = "availableStocks";
     public static final String KEY_SELECTED_STOCKS = "selectedStocks";
+    public static final int REQUEST_ADD_STOCKS = 1337;
 
     private static List<String> allowedStockNames = Arrays.asList("EURUSD", "GBPUSD", "USDCHF", "USDJPY", "AUDUSD", "USDCAD", "GBPJPY", "EURGBP", "EURJPY", "AUDCAD");
 
+    // the stocks' names and their state (picked/unpicked)
     private ArrayList<StockKVP> allowedStocks = null;
 
-    public static final int REQUEST_ADD_STOCKS = 1337;
-
+    // ASP.NET_SessionId
     String sessionId = null;
 
+    // used to refresh data every XXX(500ms) amount of time
     Handler refreshStocksHandler = null;
     Runnable getStocks = null;
+    private static final int delayBetweenRefreshes = 500;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.activity_main, container, false);
+        View view = inflater.inflate(R.layout.fragment_stocks, container, false);
 
+        // preserving fragment instance on orientation change (also doesn't break AsyncTasks)
         setRetainInstance(true);
 
+        //first we retrieve the sessionID
         if (sessionId == null) {
 
             SessionIDAsyncTask sessionIDAsyncTask = new SessionIDAsyncTask();
@@ -86,28 +98,18 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
         }
 
-        getStocks = new Runnable() {
-
-            @Override
-            public void run() {
-
-                StockAsyncTask stockAsyncTask = new StockAsyncTask();
-                stockAsyncTask.execute(sessionId);
-
-                refreshStocksHandler.postDelayed(getStocks, 500);
-
-            }
-
-        };
-
         fabAddStock = (FloatingActionButton) view.findViewById(R.id.fab_add_stock);
         recyclerView = (RecyclerView) view.findViewById(R.id.rv_layout);
 
+        stocks = new ArrayList<>();
+
+        // defaulting to first 4 stocks being available
+        // By default the application starts with EURUSD, GBPUSD, USDCHF, USDJPY.
         if (allowedStocks == null) {
 
             allowedStocks = new ArrayList<>();
 
-            StockKVP stockKVP = null;
+            StockKVP stockKVP;
 
             for (int i = 0; i < allowedStockNames.size(); ++i) {
 
@@ -120,9 +122,42 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
         }
 
-        stocks = new ArrayList<>();
+        // the runnable that is refreshing the stocks
+        getStocks = new Runnable() {
 
-        fixStocks();
+            @Override
+            public void run() {
+
+                StockAsyncTask stockAsyncTask = new StockAsyncTask();
+
+                ArrayList<String> inputs = new ArrayList<>();
+
+                // sending the sessionId together with the stocks we gathered
+                inputs.add(sessionId);
+
+                for (StockKVP stockKVP : allowedStocks) {
+
+                    if (stockKVP.picked) {
+
+                        inputs.add(stockKVP.name);
+
+                    }
+
+                }
+
+                stockAsyncTask.execute(inputs.toArray(new String[inputs.size()]));
+
+                refreshStocksHandler.postDelayed(getStocks, delayBetweenRefreshes);
+
+            }
+
+        };
+
+        reefreshStocks(recyclerView, stocks);
+
+        setDeleteOnSwipe();
+
+        setDifferentLayouts();
 
         fabAddStock.setOnClickListener(this);
 
@@ -131,41 +166,41 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onBuyClicked(View v, String stockName, double price) {
 
-                Toast.makeText(getActivity(), String.format(getResources().getString(R.string.buying_toast), stockName, String.valueOf(price)) , Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), String.format(getResources().getString(R.string.buying_toast), stockName, String.valueOf(price)), Toast.LENGTH_SHORT).show();
 
             }
 
             @Override
             public void onSellClicked(View v, String stockName, double price) {
 
-                Toast.makeText(getActivity(), String.format(getResources().getString(R.string.selling_toast), stockName, String.valueOf(price)) , Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), String.format(getResources().getString(R.string.selling_toast), stockName, String.valueOf(price)), Toast.LENGTH_SHORT).show();
 
             }
+
         }));
-
-        setDeleteOnSwipe();
-
-        fixOrientation();
 
         return view;
 
     }
 
-    public void fixStocks() {
+    /**
+     * Refreshing the stocks by re-adding them in the recyclerview's adapter
+     */
+    public void reefreshStocks(RecyclerView rv, ArrayList<Stock> newStocks) {
 
-        if (stocks != null && !stocks.isEmpty()) {
+        if (newStocks != null && !newStocks.isEmpty()) {
 
-            if (recyclerView.getAdapter() != null) {
+            if (rv.getAdapter() != null) {
 
-                //FIXME temporary workaround -- the api doesn't filter so I filter manually
-
+                // temporary workaround -- the api doesn't filter so I filter manually
+                //-------------------------- to_be_removed --------------------------
                 ArrayList<Stock> filteredStock = new ArrayList<>();
 
                 for (StockKVP allowedStock : allowedStocks) {
 
                     if (allowedStock.picked) {
 
-                        for (Stock receivedStock : stocks) {
+                        for (Stock receivedStock : newStocks) {
 
                             if (allowedStock.name.equals(receivedStock.displayName)) {
 
@@ -180,7 +215,9 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
                 }
 
                 ((RecyclerViewStockAdapter) (recyclerView.getAdapter())).replaceData(filteredStock);
-//                ((RecyclerViewStockAdapter) (recyclerView.getAdapter())).replaceData(stocks);
+                //-------------------------- to_be_removed --------------------------
+
+//                ((RecyclerViewStockAdapter) (recyclerView.getAdapter())).replaceData(newStocks);
 
             }
 
@@ -188,6 +225,9 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
     }
 
+    /**
+     * Adding delete on swipe to the {@link RecyclerView}
+     */
     public void setDeleteOnSwipe() {
 
         ItemTouchHelper.SimpleCallback swipeToDeleteCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -202,6 +242,7 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
 
+                // stock is removed from the adapter and the allowed stocks are also refreshed (its status)
                 Stock removedStock = ((RecyclerViewStockAdapter) (recyclerView.getAdapter())).removeAtPosition(viewHolder.getAdapterPosition());
                 for (StockKVP stockKVP : allowedStocks) {
 
@@ -223,7 +264,11 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
     }
 
-    public void fixOrientation() {
+    /**
+     * Depending on the orientation of the screen there are two different layouts.
+     * <br> The application should have one screen with two orientations: boxes and list.
+     */
+    public void setDifferentLayouts() {
 
         int orientation = getResources().getConfiguration().orientation;
 
@@ -233,15 +278,17 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
         } else if (orientation == Configuration.ORIENTATION_PORTRAIT) {
 
-            int columns = 2;
-
-            recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), columns));
-            recyclerView.addItemDecoration(new GridItemDecorator(columns, 10, true));
+            // setting the grid layout and its decoration
+            recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), columnsForRecyclerView));
+            recyclerView.addItemDecoration(new GridItemDecorator(columnsForRecyclerView, 10, true));
 
         }
 
     }
 
+    /**
+     * Used to start periodic updates
+     */
     public void startRequestingStocks() {
 
         refreshStocksHandler = new Handler();
@@ -250,12 +297,23 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
     }
 
+    /**
+     * Stopping periodic updates
+     */
+    public void stopRequestingStocks() {
+
+        refreshStocksHandler.removeCallbacks(getStocks);
+
+    }
+
     @Override
     public void onResume() {
 
         super.onResume();
 
-        if(sessionId != null) {
+        // we need to restart periodic updates on orientation change
+        // only if there is a sessionId (we have created everything once already)
+        if (sessionId != null) {
 
             startRequestingStocks();
 
@@ -268,13 +326,8 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
         super.onPause();
 
+        // always stopping updates when hiding the app
         stopRequestingStocks();
-
-    }
-
-    public void stopRequestingStocks() {
-
-        refreshStocksHandler.removeCallbacks(getStocks);
 
     }
 
@@ -287,12 +340,12 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
             case REQUEST_ADD_STOCKS:
 
+                // receiving the newly selected stocks and refreshing the data
                 if (resultCode == Activity.RESULT_OK) {
 
                     if (data != null && data.hasExtra(KEY_SELECTED_STOCKS)) {
 
                         allowedStocks = data.getParcelableArrayListExtra(KEY_SELECTED_STOCKS);
-                        fixStocks();
 
                     }
 
@@ -315,6 +368,7 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
             case R.id.fab_add_stock:
 
+                // launching the dialog fragment that allows the user to pick stocks to show
                 AvailableStocksDialogFragment availableStocksDialogFragment = new AvailableStocksDialogFragment();
                 Bundle args = new Bundle();
                 args.putParcelableArrayList(KEY_AVAILABLE_STOCKS, allowedStocks);
@@ -332,6 +386,9 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
     }
 
+    /**
+     * Retrieving the ASP.NET_SessionId
+     */
     public class SessionIDAsyncTask extends BaseAsyncTask<Void, Void, String> {
 
         @Override
@@ -339,21 +396,24 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
             String sessionId = null;
 
-            HttpURLConnection connection = null;
             try {
-                connection = (HttpURLConnection) defaultURL.openConnection();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            List<String> cookies = connection.getHeaderFields().get(COOKIES);
-            for (String cookie : cookies) {
 
-                if (cookie.contains(ASP_NET_SESSION)) {
+                HttpURLConnection connection = (HttpURLConnection) defaultURL.openConnection();
+                List<String> cookies = connection.getHeaderFields().get(COOKIES);
 
-                    sessionId = cookie.substring(cookie.indexOf("=") + 1, cookie.indexOf(";"));
-                    break;
+                for (String cookie : cookies) {
+
+                    if (cookie.contains(ASP_NET_SESSION)) {
+
+                        sessionId = cookie.substring(cookie.indexOf("=") + 1, cookie.indexOf(";"));
+                        break;
+
+                    }
 
                 }
+            } catch (IOException e) {
+
+                e.printStackTrace();
 
             }
 
@@ -368,11 +428,16 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
             StocksFragment.this.sessionId = s;
 
+            // once we obtain the sessionId we can start requesting the stocks
             startRequestingStocks();
 
         }
+
     }
 
+    /**
+     * Getting the requested stocks
+     */
     public class StockAsyncTask extends BaseAsyncTask<String, Void, ArrayList<Stock>> {
 
         @Override
@@ -384,10 +449,27 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
                 if (sessionId != null) {
 
+                    StringBuilder sb = new StringBuilder();
+
+                    for (int i = 1; i < strings.length; i++) {
+
+                        if (i > 1) {
+
+                            sb.append(",");
+
+                        }
+
+                        sb.append(strings[i]);
+
+                    }
+
+                    //--------------- important ---------------
+                    //--------------- to_be_removed ---------------
                     // Here would be the place to hand in the specified stocks
-                    // as of 13/08/2016 still doesn't work (did work on the 11th)
-//                specificStocksURL = new URL(baseURL + "EURUSD,GBPUSD");
+                    // as of 14/08/2016 still doesn't work (did work on the 11th)
+//                    specificStocksURL = new URL(baseURL + sb.toString());
                     specificStocksURL = defaultURL;
+                    //--------------- to_be_removed ---------------
                     HttpURLConnection specificStockConnection = (HttpURLConnection) specificStocksURL.openConnection();
 
                     specificStockConnection.setRequestProperty(ASP_NET_SESSION, sessionId);
@@ -407,28 +489,32 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
                         }
 
+                        // using jackson to deserialize to object array
                         ObjectMapper mapper = new ObjectMapper();
+                        // used to convert first capital case letters to camel case
                         mapper.setPropertyNamingStrategy(PropertyNamingStrategy.PASCAL_CASE_TO_CAMEL_CASE);
 
+                        // adding deserializer for the date
                         SimpleModule dateModule = new SimpleModule();
                         dateModule.addDeserializer(Date.class, new StockDateDeserializer());
                         mapper.registerModule(dateModule);
+
+                        //creating the jsonArray and converting it to Stock[]
                         JSONArray arrayOfStocks = new JSONArray(jsonStocks.substring(1, jsonStocks.length() - 1));
 
-                        if (arrayOfStocks != null) {
+                        Stock[] stocks = mapper.readValue(arrayOfStocks.toString(), Stock[].class);
 
-                            Stock[] stocks = mapper.readValue(arrayOfStocks.toString(), Stock[].class);
+                        // which is translated to an ArrayList
+                        if (stocks != null) {
 
-                            if (stocks != null) {
-
-                                return new ArrayList(Arrays.asList(stocks));
-
-                            }
+                            return new ArrayList<>(Arrays.asList(stocks));
 
                         }
 
                     } else {
 
+                        // if there is an error (which there was since 11th)
+                        // save the data and log it
                         br = new BufferedReader(new InputStreamReader(specificStockConnection.getErrorStream()));
 
                         String jsonStocks = "";
@@ -441,12 +527,9 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
                         }
 
-                        if (!jsonStocks.equals("")) {
-
-                        }
+                        Log.d("Naxex", "failed to download data\n" + jsonStocks);
 
                     }
-
 
                 }
 
@@ -455,7 +538,9 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
                 e.printStackTrace();
 
             } catch (JSONException e) {
+
                 e.printStackTrace();
+
             }
 
             return null;
@@ -466,9 +551,10 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
             super.onPostExecute(stocks);
 
-            if(stocks != null) {
+            if (stocks != null) {
 
-                // temporary, data isn't changing and I Need to test the design
+                // temporary, data isn't changing and I need to test the design
+                //--------------- to_be_removed ---------------
                 int decimalPlaces = 4;
                 for (int i = 0; i < stocks.size(); ++i) {
 
@@ -477,10 +563,11 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
                     stocks.get(i).changeOrientation = random.nextInt(3);
 
                 }
+                //--------------- to_be_removed ---------------
 
                 StocksFragment.this.stocks = stocks;
 
-                fixStocks();
+                reefreshStocks(recyclerView, StocksFragment.this.stocks);
 
             }
 
@@ -488,6 +575,13 @@ public class StocksFragment extends Fragment implements View.OnClickListener {
 
     }
 
+    /**
+     * Used to truncate the doubles to only 4 symbols after
+     * decimal point, probably useless if used with real data
+     * @param value -- double value to trunkate
+     * @param decimalPlaces -- number of decimal places to truncate to
+     * @return -- truncated double value
+     */
     private double round(double value, int decimalPlaces) {
 
         BigDecimal bd = new BigDecimal(value);

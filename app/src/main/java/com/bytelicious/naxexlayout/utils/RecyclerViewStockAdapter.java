@@ -21,6 +21,7 @@ import java.util.ArrayList;
 
 /**
  * Created by ACER PC on 8/11/2016.
+ * Main adapter that controls the stocks.
  */
 public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewStockAdapter.StockViewHolder> {
 
@@ -32,6 +33,7 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
     RelativeSizeSpan sizeSpan;
     ForegroundColorSpan greenColorSpan;
     ForegroundColorSpan redColorSpan;
+    ForegroundColorSpan blackColorSpan;
 
     public RecyclerViewStockAdapter(Context context, ArrayList<Stock> stocks, StockActionListener stockActionListener) {
 
@@ -43,6 +45,7 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
         sizeSpan = new RelativeSizeSpan(2f);
         greenColorSpan = new ForegroundColorSpan(Color.GREEN);
         redColorSpan = new ForegroundColorSpan(Color.RED);
+        blackColorSpan = new ForegroundColorSpan(Color.BLACK);
 
     }
 
@@ -51,9 +54,7 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
 
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.rv_element, null);
 
-        StockViewHolder stockViewHolder = new StockViewHolder(view, stockActionListener);
-
-        return stockViewHolder;
+        return new StockViewHolder(view, stockActionListener);
 
     }
 
@@ -73,6 +74,9 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
 
     }
 
+    /**
+     * On button click listener for the buttons inside each item.
+     */
     public interface StockActionListener {
 
         void onBuyClicked(View v, String stockName, double price);
@@ -131,17 +135,10 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
 
     public Stock removeAtPosition(int position) {
 
-//        if(position > -1 && position < stocks.size()) {
+        Stock removedStock = stocks.remove(position);
+        notifyDataSetChanged();
+        return removedStock;
 
-//            boolean removed = stocks.remove(position) != null;
-            Stock removedStock = stocks.remove(position);
-            notifyDataSetChanged();
-            return removedStock;
-//            return removed;
-//
-//        }
-//
-//        return false;
     }
 
     public void add(Stock newStock) {
@@ -151,12 +148,10 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
 
     }
 
-    public ArrayList<Stock> getStocks() {
-
-        return stocks;
-
-    }
-
+    /**
+     * Used to repopulate the adapter with fresh data.
+     * @param newData -- new data to repopulate the adapter with
+     */
     public void replaceData(ArrayList<Stock> newData) {
 
         this.stocks = newData;
@@ -164,6 +159,12 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
 
     }
 
+    /**
+     * Stylizing the {@link TextView}s.
+     * @param number -- the number to be stylized
+     * @param orientation -- {@link Stock}'s changeOrientation
+     * @return -- {@link SpannableStringBuilder} that is stylized
+     */
     private SpannableStringBuilder stylizeNumbers(String number, int orientation) {
 
         String data = String.valueOf(number);
@@ -189,6 +190,7 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
             case 3:
 
                 //black color? current is gray
+//                sb.setSpan(blackColorSpan, 0, data.length(), 0);
 
                 break;
 
@@ -198,7 +200,9 @@ public class RecyclerViewStockAdapter extends RecyclerView.Adapter<RecyclerViewS
 
         }
 
+        // bolding last 2 digits
         sb.setSpan(boldSpan, number.length() - 2, number.length(), 0);
+        // increasing last 2 digits' size
         sb.setSpan(sizeSpan, number.length() - 2, number.length(), 0);
 
         return sb;

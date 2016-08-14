@@ -7,6 +7,7 @@ import java.net.URL;
 
 /**
  * Created by ACER PC on 8/11/2016.
+ * Class to be reused for getting the SessionID and the stocks
  */
 public abstract class BaseAsyncTask<T, K, V> extends AsyncTask<T, K, V> {
 

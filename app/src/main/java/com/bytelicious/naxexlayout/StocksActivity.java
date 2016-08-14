@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 
 /**
  * Created by ACER PC on 8/13/2016.
+ * Container for the fragment that contains the main view
  */
 public class StocksActivity extends AppCompatActivity {
 

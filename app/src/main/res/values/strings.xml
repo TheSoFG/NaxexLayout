@@ -7,4 +7,5 @@
     <string name="bid">Bid</string>
     <string name="selling_toast">Sold %1$s at %2$s</string>
     <string name="buying_toast">Bought %1$s at %2$s</string>
+    <string name="symbol">Symbol</string>
 </resources>

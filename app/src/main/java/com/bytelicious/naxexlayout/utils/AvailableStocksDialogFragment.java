@@ -11,24 +11,19 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
 
-import com.bytelicious.naxexlayout.MainActivity;
 import com.bytelicious.naxexlayout.R;
+import com.bytelicious.naxexlayout.StocksFragment;
 import com.bytelicious.naxexlayout.pojos.StockKVP;
 
 import java.util.ArrayList;
 
+/**
+ * Dialog fragment that shows a list of stocks and their state (picked/unpicked)
+ */
 public class AvailableStocksDialogFragment extends DialogFragment implements View.OnClickListener {
 
     Button btnAddAvailableStock;
     ListView lvAvailableStocks;
-
-    private OnDFResult onDFResult;
-
-    public interface OnDFResult {
-
-        void onDFResult(Intent data);
-
-    }
 
     ArrayList<StockKVP> availableStocks = null;
 
@@ -42,24 +37,14 @@ public class AvailableStocksDialogFragment extends DialogFragment implements Vie
                 availableStocks = ((AvailableStocksBaseAdapter) lvAvailableStocks.getAdapter()).getModifiedData();
 
                 Intent intent = new Intent();
-                intent.putExtra(MainActivity.KEY_SELECTED_STOCKS, availableStocks);
+                intent.putExtra(StocksFragment.KEY_SELECTED_STOCKS, availableStocks);
 
-                if (onDFResult != null) {
+                if (getTargetFragment() != null) {
 
-                    onDFResult.onDFResult(intent);
+                    getTargetFragment().onActivityResult(
+                            getTargetRequestCode(), Activity.RESULT_OK, intent);
 
                     dismiss();
-
-                } else {
-
-                    if (getTargetFragment() != null) {
-
-                        getTargetFragment().onActivityResult(
-                                getTargetRequestCode(), Activity.RESULT_OK, intent);
-
-                        dismiss();
-
-                    }
 
                 }
 
@@ -85,23 +70,18 @@ public class AvailableStocksDialogFragment extends DialogFragment implements Vie
 
         Bundle args = getArguments();
 
-        if (args != null && args.containsKey(MainActivity.KEY_AVAILABLE_STOCKS)) {
+        if (args != null && args.containsKey(StocksFragment.KEY_AVAILABLE_STOCKS)) {
 
-            availableStocks = args.getParcelableArrayList(MainActivity.KEY_AVAILABLE_STOCKS);
+            availableStocks = args.getParcelableArrayList(StocksFragment.KEY_AVAILABLE_STOCKS);
 
         }
 
+        //using the custom base adapter to allow the user to pick stocks to be shown
         lvAvailableStocks.setAdapter(new AvailableStocksBaseAdapter(getActivity(), availableStocks));
 
         btnAddAvailableStock.setOnClickListener(this);
 
         return rootView;
-
-    }
-
-    public void setOnDFResult(OnDFResult onDFResult) {
-
-        this.onDFResult = onDFResult;
 
     }
 

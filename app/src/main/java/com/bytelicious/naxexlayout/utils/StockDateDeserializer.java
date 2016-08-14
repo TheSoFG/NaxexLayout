@@ -12,6 +12,7 @@ import java.util.Date;
 
 /**
  * Created by ACER PC on 8/12/2016.
+ * Deserializer for the jackson library that allows the input type to be resolved as a normal {@link Date} object.
  */
 public class StockDateDeserializer extends JsonDeserializer<Date> {
 
@@ -22,13 +23,23 @@ public class StockDateDeserializer extends JsonDeserializer<Date> {
             throws IOException {
 
         if (jp.getCurrentTokenId() == JsonTokenId.ID_STRING) {
+
             try {
+
                 return DateUtils.parseDate(jp.getText(), "dd/MM/yyyy HH:mm:ss");
+
             } catch (Exception e) {
+
                 return null;
+
             }
+
         } else {
+
             return null;
+
         }
+
     }
+
 }

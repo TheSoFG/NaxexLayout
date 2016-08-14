@@ -6,5 +6,6 @@
     <dimen name="border_width">1dp</dimen>
     <dimen name="divider_width">1dp</dimen>
     <dimen name="horizontal_textview_margin">10dp</dimen>
+    <dimen name="vertical_header_margin">5dp</dimen>
     <dimen name="horizontal_padding">5dp</dimen>
 </resources>
